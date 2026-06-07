@@ -13,7 +13,7 @@ from ultralytics import YOLO
 # =========================
 CAMINHO_MODELO = r"C:\Users\cmay\PycharmProjects\PythonProject\runs\classify\train3\weights\best.pt"
 CAMINHO_FADIGA = r"C:\Users\cmay\PycharmProjects\PythonProject\fadiga.mp3"
-CAMINHO_MICROSLEEP = r"C:\Users\cmay\PycharmProjects\PythonProject\alarme.mp3"
+CAMINHO_MICROSLEEP = r"C:\Users\cmay\PycharmProjects\PythonProject\alerta.mp3"
 
 # =========================
 # MODELO
