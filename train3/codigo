@@ -35,6 +35,9 @@ IMG_SIZE = 224
 CONFIANCA_MINIMA = 0.55
 PROCESSAR_CADA_N_FRAMES = 2
 USAR_ROI_CENTRAL_SEM_ROSTO = False
+GRAVAR_VIDEO = True
+FPS_GRAVACAO = 10
+CAMINHO_GRAVACAO = PROJETO_DIR / "gravacao_tcc.avi"
 
 LIMITE_PISCADA = 0.4
 LIMITE_ATENCAO = 1.0
@@ -337,6 +340,30 @@ def cor_por_resultado(resultado):
     return (0, 0, 255)
 
 
+def criar_gravador(frame_shape):
+    if not GRAVAR_VIDEO:
+        return None
+
+    altura, largura = frame_shape[:2]
+    codecs = ["XVID", "MJPG"]
+
+    for codec in codecs:
+        gravador = cv2.VideoWriter(
+            str(CAMINHO_GRAVACAO),
+            cv2.VideoWriter_fourcc(*codec),
+            FPS_GRAVACAO,
+            (largura, altura),
+        )
+        if gravador.isOpened():
+            print(f"Gravando video em: {CAMINHO_GRAVACAO}")
+            return gravador
+
+        gravador.release()
+
+    print("Aviso: nao foi possivel iniciar a gravacao de video.")
+    return None
+
+
 def atualizar_alerta(resultado_final, frame_vis):
     global tempo_inicio_fechado
     global manter_acorda_ate
@@ -452,6 +479,7 @@ def main():
     camera.abrir()
 
     frame_count = 0
+    gravador = None
     ultimo_resultado = {
         "face_box": None,
         "eye_box": None,
@@ -470,6 +498,9 @@ def main():
                 break
 
             frame_vis = frame.copy()
+            if gravador is None:
+                gravador = criar_gravador(frame_vis.shape)
+
             frame_count += 1
 
             if frame_count % PROCESSAR_CADA_N_FRAMES == 0:
@@ -556,6 +587,9 @@ def main():
             )
             desenhar_mensagem(frame_vis, mensagem_tela)
 
+            if gravador is not None:
+                gravador.write(frame_vis)
+
             cv2.imshow("Classificacao de olhos - Raspberry + NCNN + P2", frame_vis)
 
             if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -564,6 +598,8 @@ def main():
     finally:
         parar_fadiga()
         parar_acorda()
+        if gravador is not None:
+            gravador.release()
         camera.fechar()
         cv2.destroyAllWindows()
         print("Desligando...")

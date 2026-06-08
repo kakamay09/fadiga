@@ -60,6 +60,15 @@ python train3/codigo
 
 Pressione `q` para sair.
 
+O script grava automaticamente o video processado com caixas e mensagens em:
+
+```text
+gravacao_tcc.avi
+```
+
+Esse arquivo fica salvo na raiz do projeto, ao lado de `fadiga.mp3` e
+`alerta.mp3`.
+
 ## Audio na saida P2
 
 As caixas de som devem estar:
