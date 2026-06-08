@@ -74,7 +74,8 @@ abra as configuracoes de audio do Raspberry Pi OS e selecione manualmente
 ## Logica de alerta
 
 - abaixo de `0.4s`: piscada normal;
-- de `1.0s` a `2.0s`: `ATENCAO`;
-- de `2.0s` a `3.0s`: toca `fadiga.mp3`;
-- acima de `3.0s`: toca `alerta.mp3`;
-- apos abrir os olhos, o alerta critico continua por `10s`.
+- de `1.0s` a `3.0s`: `ATENCAO` visual, sem audio;
+- acima de `3.0s` com olhos fechados continuamente: toca `alerta.mp3`;
+- o alerta critico continua por `10s` sem reiniciar por piscadas;
+- depois dos `10s`, o som so toca novamente se os olhos fecharem por mais `3s`;
+- se o rosto/olhos ficarem sem deteccao, o sistema nao dispara audio.

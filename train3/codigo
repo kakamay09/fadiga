@@ -34,12 +34,11 @@ ALTURA_CAMERA = 480
 IMG_SIZE = 224
 CONFIANCA_MINIMA = 0.55
 PROCESSAR_CADA_N_FRAMES = 2
-USAR_ROI_CENTRAL_SEM_ROSTO = True
+USAR_ROI_CENTRAL_SEM_ROSTO = False
 
 LIMITE_PISCADA = 0.4
 LIMITE_ATENCAO = 1.0
-LIMITE_FADIGA = 2.0
-LIMITE_MICROSLEEP = 3.0
+LIMITE_FADIGA = 3.0
 TEMPO_ACORDA_APOS_ABRIR = 10.0
 
 CLASSES = {
@@ -346,9 +345,34 @@ def atualizar_alerta(resultado_final, frame_vis):
     agora = time.time()
     mensagem_tela = ""
 
-    if resultado_final == "olhos_fechados":
-        manter_acorda_ate = None
+    if manter_acorda_ate is not None:
+        tempo_restante = manter_acorda_ate - agora
 
+        if tempo_restante > 0:
+            parar_fadiga()
+            cv2.putText(
+                frame_vis,
+                f"Alarme critico: {max(0, tempo_restante):.1f}s",
+                (20, 65),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.8,
+                (0, 0, 255),
+                2,
+            )
+            return "ACORDA"
+
+        parar_acorda()
+        manter_acorda_ate = None
+        tempo_inicio_fechado = None
+        ja_entrou_microsleep = False
+
+    if resultado_final == "sem deteccao":
+        tempo_inicio_fechado = None
+        ja_entrou_microsleep = False
+        parar_fadiga()
+        return ""
+
+    if resultado_final == "olhos_fechados":
         if tempo_inicio_fechado is None:
             tempo_inicio_fechado = agora
             ja_entrou_microsleep = False
@@ -372,44 +396,20 @@ def atualizar_alerta(resultado_final, frame_vis):
             mensagem_tela = "ATENCAO"
             parar_fadiga()
 
-        elif LIMITE_FADIGA <= tempo_fechado < LIMITE_MICROSLEEP:
-            mensagem_tela = "FADIGA DETECTADA"
-
-            if proc_acorda is None:
-                tocar_fadiga()
-
-        elif tempo_fechado >= LIMITE_MICROSLEEP:
+        elif tempo_fechado >= LIMITE_FADIGA:
             mensagem_tela = "ACORDA"
             parar_fadiga()
 
             if not ja_entrou_microsleep:
                 tocar_acorda()
+                manter_acorda_ate = agora + TEMPO_ACORDA_APOS_ABRIR
                 ja_entrou_microsleep = True
+                tempo_inicio_fechado = None
 
     else:
         tempo_inicio_fechado = None
         ja_entrou_microsleep = False
         parar_fadiga()
-
-        if proc_acorda is not None:
-            if manter_acorda_ate is None:
-                manter_acorda_ate = agora + TEMPO_ACORDA_APOS_ABRIR
-
-            tempo_restante = manter_acorda_ate - agora
-
-            cv2.putText(
-                frame_vis,
-                f"Alarme critico: {max(0, tempo_restante):.1f}s",
-                (20, 65),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.8,
-                (0, 0, 255),
-                2,
-            )
-
-            if agora >= manter_acorda_ate:
-                parar_acorda()
-                manter_acorda_ate = None
 
     return mensagem_tela
 
